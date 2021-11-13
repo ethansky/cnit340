@@ -38,10 +38,10 @@ author(){
 type(){
 	#prints file contents
 	typeset TYPE=$(checkf $1)
-	echo $TYPE
 	if [[  $TYPE == "file" ]]
 	then
 		cat $1
+		echo -e "\nUNIX command ran: cat $1\n"
 	elif [[ $TYPE == "dir" ]]
 	then
 		echo "The inputted file is a directory."
@@ -56,20 +56,36 @@ copy(){
 	then
 		echo "The inputted file or directory does not exist."
 
-	elif [[ $3 == 0 ]]
-	then
-		echo -e "\nUNIX command ran: cp -f $1 $2\n"
-		cp -f $1 $2 1> /dev/null 2> /dev/null
-		echo "The command was a success!"
-	
 	elif [[ $(checkf $2) != "not found" ]]
-	then
-		echo "The target path already exists and would be overwritten... aborting."
-	
+		then
+			echo "The target path already exists and would be overwritten... aborting."
 	else
-		echo -e "\nUNIX command ran: cp $1 $2\n"
-		cp $1 $2 1> /dev/null 2> /dev/null
-		echo "The command was a success!"
+		if [[ $3 == 0 ]]
+		#force is true
+		then
+			if [[ $(checkf $1) == "file" ]]
+			then
+				echo -e "\nUNIX command ran: cp -f $1 $2\n"
+				cp -f $1 $2 1> /dev/null 2> /dev/null
+				echo "The command was a success!"
+			else
+				echo -e "\nUNIX command ran: cp -f $1 $2\n"
+				cp -Rf $1 $2 1> /dev/null 2> /dev/null
+				echo "The command was a success!"
+			fi
+		else
+		#force is false
+			if [[ $(checkf $1) == "file" ]]
+			then
+				echo -e "\nUNIX command ran: cp $1 $2\n"
+				cp $1 $2 1> /dev/null 2> /dev/null
+				echo "The command was a success!"
+			else
+				echo -e "\nUNIX command ran: cp $1 $2\n"
+				cp -R $1 $2 1> /dev/null 2> /dev/null
+				echo "The command was a success!"
+			fi
+		fi
 	fi
 }
 
@@ -79,43 +95,50 @@ ren(){
 	then
 		echo "The inputted file or directory does not exist."
 	
-	elif [[ $3 == 0 ]]
-	then
-		echo -e "\nUNIX command ran: mv -f $1 $2\n"
-		mv -f $1 $2 1> /dev/null 2> /dev/null
-		echo "The command was a success!"
-	
-	elif [[ $(checkf $2) != "not found" ]]
+	elif [[ $(checkf $2) != "not found" && $3 != 0 ]]
 	then
 		echo "The target path already exists and would be overwritten... aborting."
 	
 	else
-		echo -e "\nUNIX command ran: mv $1 $2\n"
-		mv $1 $2 1> /dev/null 2> /dev/null
-		echo "The command was a success!"
+		if [[ $3 == 0 ]]
+		#force is true
+		then
+			echo -e "\nUNIX command ran: mv -f $1 $2\n"
+			mv -f $1 $2 1> /dev/null 2> /dev/null
+			echo "The command was a success!"
+
+		else
+		#force is false
+			echo -e "\nUNIX command ran: mv $1 $2\n"
+			mv $1 $2 1> /dev/null 2> /dev/null
+			echo "The command was a success!"
+		fi
 	fi
 }
 
 move(){
 	#moves file
-	if [[ $(checkf $1) == "not found" || ! $(checkf $2) == "not found" ]]
+	if [[ $(checkf $1) == "not found" || $(checkf $2) == "not found" ]]
 	then
 		echo "The inputted file or directory does not exist."
 	
-	elif [[ $3 == 0 ]]
-	then
-		echo -e "\nUNIX command ran: mv -f $1 $2\n"
-		mv -f $1 $2 1> /dev/null 2> /dev/null
-		echo "The command was a success!"
-	
-	elif [[ $(checkf $2/$1) != "not found" ]]
+	elif [[ $(checkf $2/$1) != "not found"  && $3 != 0 ]]
 	then
 		echo "The target path already exists and would be overwritten... aborting."
-	
 	else
-		echo -e "\nUNIX command ran: mv $1 $2\n"
-		mv $1 $2 1> /dev/null 2> /dev/null
-		echo "The command was a success!"
+		if [[ $3 == 0 ]]
+		#force is true
+		then
+			echo -e "\nUNIX command ran: mv -f $1 $2\n"
+			mv -f $1 $2 1> /dev/null 2> /dev/null
+			echo "The command was a success!"
+		
+		else
+		#force is false
+			echo -e "\nUNIX command ran: mv $1 $2\n"
+			mv $1 $2 1> /dev/null 2> /dev/null
+			echo "The command was a success!"
+		fi
 	fi
 }
 
@@ -133,7 +156,7 @@ del(){
 		rm -rf $1 1> /dev/null 2> /dev/null
 		echo "The command was a success!"
 
-else
+	else
 		echo "The inputted file or directory does not exist."
 	fi
 }
