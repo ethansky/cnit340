@@ -18,6 +18,76 @@ ARG1=$1
 ARG2=$2
 ARG3=$3
 
+
+interactive(){
+	PS3="Select a sorting option: "
+	OPTIONS=(name age size)
+	select OPTION in ${OPTIONS[@]}
+	do
+		case $OPTION in
+			name)
+				FILES=($(ls))
+			;;
+
+			age)
+				FILES=($(ls --sort=time))
+			;;
+
+			size)
+				FILES=($(ls --sort=size))
+			;;
+		esac
+	break
+	done
+	
+	PS3="Select an file: "
+	select FILE in ${FILES[@]}
+	do
+		PS3="Select an option: "
+		OPTIONS=(type copy ren del move help copy\! move\! ren\!)
+		select OPTION in ${OPTIONS[@]}
+		do
+			case $OPTION in 
+				type)
+					cat ./$FILE
+				;;
+				copy)
+					read -p 'Enter the name for the copied file: ' FILE2
+					copy ./$FILE ./$FILE2 1
+				;;
+				ren)
+					read -p 'Enter the new file name: ' FILE2
+					ren ./$FILE ./$FILE2 1
+				;;
+				del)
+					del ./$FILE
+				;;
+				move)
+					read -p 'Enter the directory the file should be moved into: ' DIR
+					move ./$FILE ./$DIR 1
+				;;
+				help)
+					help
+				;;
+				copy\!)
+					read -p 'Enter the name for the copied file: ' FILE2
+					copy ./$FILE ./$FILE2 0
+				;;
+				move\!)
+					read -p 'Enter the directory the file should be moved into: ' DIR
+					move ./$FILE ./$DIR 0
+				;;
+				ren\!)
+					read -p 'Enter the new file name: ' FILE2
+					ren ./$FILE ./$FILE2 0
+				;;
+			esac
+			break
+		done
+		break
+	done
+}
+
 checkf(){
 	if [[ -f $1 ]]
 	then
@@ -56,8 +126,9 @@ copy(){
 	then
 		echo "The inputted file or directory does not exist."
 
-	elif [[ $(checkf $2) != "not found" ]]
+	elif [[ $(checkf $2) != "not found" && $3 != 0 ]]
 		then
+			echo $(checkf $2)
 			echo "The target path already exists and would be overwritten... aborting."
 	else
 		if [[ $3 == 0 ]]
@@ -121,7 +192,9 @@ move(){
 	if [[ $(checkf $1) == "not found" || $(checkf $2) == "not found" ]]
 	then
 		echo "The inputted file or directory does not exist."
-	
+	elif [[ $(checkf $2) == "file" ]]
+	then
+		echo "The target destination is not a directory. Aborting..."	
 	elif [[ $(checkf $2/$1) != "not found"  && $3 != 0 ]]
 	then
 		echo "The target path already exists and would be overwritten... aborting."
@@ -221,7 +294,7 @@ case $ARG1 in
 
 	#catch all other unsupported commands
 	*)
-		help
+		interactive
 		;;
 esac
 
