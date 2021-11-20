@@ -9,44 +9,57 @@
 HELPOUTPUT="author  |\toutputs the author of the script\n
 type [file]  |\toutputs the contents of the file\n
 copy [file] [destination]  |\tmakes a copy of a file\n
+copy! [file] [destination]  |\tmakes a copy of a file and overwrites any existing file\n
 ren [file] [new name]  |\trenames a file\n
+ren! [file] [new name]  |\trenames a file and overwrites any existing file\n
 move [file] [destination]  |\tmoves a file\n
+move! [file] [destination]  |\tmoves a file and overwrite any existing file\n
+chgrp [file] [group]  |\tchanges the group for a file
+chperm [file] [perm]  |\tchanges the permissions for a file
+firstlines [file] [lines]  |\tdisplays the first n lines of the file
+lastlines [file] [lines]  |\tdisplays last n lines of the file
 del [file]  |\t deletes a file skipping confirmation\n
 help [file]  |\tdisplays this help and exit"
 #read arguments ..
-ARG1=$1
+ARG1=${1,,} # converts to lower case
 ARG2=$2
 ARG3=$3
+# FS=$(ls)
+# for F in "${FS[@]}"; do echo "$F"; done
+
 
 
 interactive(){
 	PS3="Select a sorting option: "
+	OLD_IFS=${IFS}
+	IFS="
+	"
 	OPTIONS=(name age size)
 	select OPTION in ${OPTIONS[@]}
 	do
 		case $OPTION in
 			name)
-				FILES=($(ls))
+				FILES=$(ls)
 			;;
 
 			age)
-				FILES=($(ls --sort=time))
+				FILES=$(ls --sort=time)
 			;;
 
 			size)
-				FILES=($(ls --sort=size))
+				FILES=$(ls --sort=size)
 			;;
 		esac
 	break
 	done
-	
 	PS3="Select an file: "
 	select FILE in ${FILES[@]}
 	do
 		PS3="Select an option: "
-		OPTIONS=(type copy ren del move help copy\! move\! ren\!)
+		OPTIONS=(type copy ren del move help copy\! move\! ren\! chgrp chperm "first lines" "last lines")
 		select OPTION in ${OPTIONS[@]}
 		do
+			IFS=${OLD_IFS}
 			case $OPTION in 
 				type)
 					cat ./$FILE
@@ -81,6 +94,22 @@ interactive(){
 					read -p 'Enter the new file name: ' FILE2
 					ren ./$FILE ./$FILE2 0
 				;;
+				chgrp)
+					read -p 'Enter the new group: ' GROUP
+					chgrp ./$FILE $GROUP
+				;;
+				chperm)
+					read -p 'Enter the new permissions in octal form: ' OCT
+					chperm ./$FILE $OCT
+				;;
+				"first lines")
+					read -p 'Enter the number of lines: ' NUM
+					firstlines ./$FILE $NUM
+				;;
+				"last lines")
+					read -p 'Enter the number of lines: ' NUM
+					lastlines ./$FILE $NUM
+				;;
 			esac
 			break
 		done
@@ -103,6 +132,49 @@ checkf(){
 author(){
 	#prints author info
 	echo Emmons, Ethan
+}
+
+chgrp(){
+	#assumes that the group exists
+	if [[ $(checkf $1) == "not found" ]]
+	then
+		echo "The inputted file or directory does not exist."
+	else
+		chgrp $1 $2
+	fi
+}
+
+chperm(){
+	if [[ $(checkf $1) == "not found" ]]
+	then
+		echo "The inputted file or directory does not exist."
+	else
+		chmod $2 ./$1
+	fi
+}
+
+firstlines(){
+	if [[ $(checkf $1) == "directory" ]]
+	then
+		echo "The inputted file is a directory... aborting"
+	elif [[ $(checkf $1) == "not found" ]]
+	then
+		echo "The inputted file does not exist."
+	else
+		head -$2 ./$1
+	fi
+}
+
+lastlines(){
+	if [[ $(checkf $1) == "directory" ]]
+	then
+		echo "The inputted file is a directory... aborting"
+	elif [[ $(checkf $1) == "not found" ]]
+	then
+		echo "The inputted file does not exist."
+	else
+		tail -$2 ./$1
+	fi
 }
 
 type(){
@@ -128,7 +200,6 @@ copy(){
 
 	elif [[ $(checkf $2) != "not found" && $3 != 0 ]]
 		then
-			echo $(checkf $2)
 			echo "The target path already exists and would be overwritten... aborting."
 	else
 		if [[ $3 == 0 ]]
@@ -287,6 +358,25 @@ case $ARG1 in
 		del $2 
 		;;
 	
+	#changes the group of a file or directory
+	"chgrp")	
+		chgrp $2 $3
+		;;
+
+	#changes the permissions of a file
+	"chperm")
+		chperm $2 $3
+		;;
+
+	#displays first n lines of a file
+	"firstlines")
+		firstlines $2 $3
+		;;
+
+	#displays last n lines of a file
+	"lastlines")
+		lastlines $2 $3
+		;;
 	#outputs supported commands, action, and required parameters
 	"help")
 		help
