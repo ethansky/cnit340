@@ -1,40 +1,9 @@
-# Backup script configuration file
-# Written by P.T. Rawles, modified by Yang, 11/15/2021
-# 
-# General configuration
-# COMPRESSION = compression program
-# 	value should be the command used to compress the tar file
-# 	default is gzip
-COMPRESSION = gzip
-# E-MAIL = the e-mail address who which the daily log should be sent
-E-MAIL = jack@g80.cent.c340.cit.lcl
-#
-# Target configuration
-# BACKUP_TARGET = filesystem in which to store the backup files
-BACKUP_TARGET = /backup
-#TARGET_TYPE = type of filesystem used for backup_target
-#	local
-#	nfs
-#	smb
-TARGET_TYPE = local
-#TARGET_SERVER = DNS name of target server if not local
-#BACK UP TO WINDOWS SERVER or BSD are both acceptable
-TARGET_SERVER = g80.bsd.c340.cit.lcl
-#TARGET_FS = filesystem/share/export on the target server that will be mounted to backup_target
-TARGET_FS = /backups
-# USER = username for SMB target
-USER = backup
-# PASSWORD = password for user
-PASSWORD = user_pass
-#
-# Backup entries
-# colon separated entries for each directory to backup in the format:
-# NAME:DIRECTORY:RECURSIVE: NUM_DAILY:NUM_WEEKLY:NUM_MONTHLY
-#	NAME ?the name of this directory entry
-#	DIRECTORY ?the directory to backup
-#	RECURSIVE ?a Boolean Y/N whether to backup subdirectories
-#	NUM_DAILY ?the number of daily copies to keep
-#	NUM_WEEKLY ?the number of weekly copies to keep
-#	NUM_MONTHLY ?the number of monthly copies to keep
-home:/home:Y:2:3:1
-config:/etc:Y:2:3:2
+#!/bin/bash
+#Ethan Emmons
+#Purpose: This script reads a configuration file and automates backups of directories
+#Last Revision Date: 11/29/21
+#Variables: 
+
+
+
+# grep '^[^#]*?*:?*' backup.conf | cut -d: -f
