@@ -14,46 +14,30 @@
 
 #store user entered backup entry target
 BACKUP_NAME=$1
-
 #REGEX to match lines that do not start with a # and contains an =
 eval "$(grep '^[^#]*?*=?*' backup.conf)"
-echo "Compression method: $COMPRESSION"
-echo "Email: $EMAIL"
-echo "Backup target: $BACKUP_TARGET"
-echo "Target type: $TARGET_TYPE"
-echo "Target server: $TARGET_SERVER"
-echo "Target filesystem: $TARGET_FS"
-echo "SMB username: $USER"
-echo "SMB password: $PASSWORD"
-
-HOME_ENTRIES=$(grep '^[^#]*?*:?*' backup.conf | cut -d: -f1)
-echo "Home directories: ${HOME_ENTRIES[@]}" | tr '\n' ' '
-echo -e "\n\n"
-
 #REGEX match lines that d not start with # and contains a :
 RAW_ENTRIES=($(grep '^[^#]*?*:?*' backup.conf))
+
+compress(){
+    #function that compresses the files and stores the compressed files in a log file
+    if [[  $1 == "gzip"  ]]
+    then
+    DATE=$(date +'%Y-%m-%d.%H:%M')
+    echo "BACKUP MADE ON: $DATE" > /var/log/backup/$BACKUP_NAME.$DATE
+    tar -czvf "$BACKUP_TARGET/$HOSTNAME.$BACKUP_NAME.$DATE.tar.gz" $2 1>> /var/log/backup/$BACKUP_NAME.$DATE 2>/dev/null
+    else
+    echo "Unsupported compression method: $1"
+    fi
+}
+
 #iterate through the matches lines and check if the first field equals the user entered backup name
 for ENTRY in ${RAW_ENTRIES[@]}
 do
 if [[ $(echo $ENTRY | cut -d: -f1) == $BACKUP_NAME ]]
 then
-    if [[ ! -f /backup ]]
-    then
-    echo cow
-    fi
-    compress $COMPRESSION
+    if [[ ! -d $BACKUP_TARGET ]]; then mkdir $BACKUP_TARGET; fi
+    if [[ ! -d /var/log/backup ]]; then mkdir /var/log/backup; fi
+    compress $COMPRESSION $(echo $ENTRY | cut -d: -f2)
 fi
 done
-
-compress(){
-    if [[  $COMPRESSION == "gzip"  ]]
-    then
-    # tar -czf "$HOSTNAME.$BACKUP_NAME.tar.gz"
-    DATE=$(date +'%Y-%m-%d.%H:%M')
-    echo "$HOSTNAME.$BACKUP_NAME.$DATE.tar.gz"
-    else
-    echo "Unsupported compression method: $COMPRESSION"
-    fi
-}
-
-compress
