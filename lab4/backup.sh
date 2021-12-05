@@ -12,6 +12,9 @@
 #USER: username of the SMB share
 #PASSWORD: password of the SMB share
 
+#store user entered backup entry target
+BACKUP_NAME=$1
+
 #REGEX to match lines that do not start with a # and contains an =
 eval "$(grep '^[^#]*?*=?*' backup.conf)"
 echo "Compression method: $COMPRESSION"
@@ -24,4 +27,33 @@ echo "SMB username: $USER"
 echo "SMB password: $PASSWORD"
 
 HOME_ENTRIES=$(grep '^[^#]*?*:?*' backup.conf | cut -d: -f1)
-echo -n "Home directories: ${HOME_ENTRIES[@]}" | tr '\n' ' '
+echo "Home directories: ${HOME_ENTRIES[@]}" | tr '\n' ' '
+echo -e "\n\n"
+
+#REGEX match lines that d not start with # and contains a :
+RAW_ENTRIES=($(grep '^[^#]*?*:?*' backup.conf))
+#iterate through the matches lines and check if the first field equals the user entered backup name
+for ENTRY in ${RAW_ENTRIES[@]}
+do
+if [[ $(echo $ENTRY | cut -d: -f1) == $BACKUP_NAME ]]
+then
+    if [[ ! -f /backup ]]
+    then
+    echo cow
+    fi
+    compress $COMPRESSION
+fi
+done
+
+compress(){
+    if [[  $COMPRESSION == "gzip"  ]]
+    then
+    # tar -czf "$HOSTNAME.$BACKUP_NAME.tar.gz"
+    DATE=$(date +'%Y-%m-%d.%H:%M')
+    echo "$HOSTNAME.$BACKUP_NAME.$DATE.tar.gz"
+    else
+    echo "Unsupported compression method: $COMPRESSION"
+    fi
+}
+
+compress
