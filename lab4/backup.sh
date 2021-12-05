@@ -1,7 +1,7 @@
 #!/bin/bash
 #Ethan Emmons
 #Purpose: This script reads a configuration file and automates backups of directories
-#Last Revision Date: 12/1/21
+#Last Revision Date: 12/5/21
 #Variables: 
 #COMPRESSION: compression method
 #EMAIL: email to send logs to
@@ -41,3 +41,4 @@ then
     compress $COMPRESSION $(echo $ENTRY | cut -d: -f2)
 fi
 done
+echo "Backup complete!"
