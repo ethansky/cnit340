@@ -20,12 +20,17 @@ eval "$(grep '^[^#]*?*=?*' backup.conf)"
 RAW_ENTRIES=($(grep '^[^#]*?*:?*' backup.conf))
 
 compress(){
+    SUBDIR=$3
+    DATE=$(date +'%Y-%m-%d.%H:%M')
     #function that compresses the files and stores the compressed files in a log file
     if [[  $1 == "gzip"  ]]
     then
-    DATE=$(date +'%Y-%m-%d.%H:%M')
     echo "BACKUP MADE ON: $DATE" > /var/log/backup/$BACKUP_NAME.$DATE
-    tar -czvf "$BACKUP_TARGET/$HOSTNAME.$BACKUP_NAME.$DATE.tar.gz" $2 1>> /var/log/backup/$BACKUP_NAME.$DATE 2>/dev/null
+    tar -czvf "$BACKUP_TARGET/$SUBDIR/$HOSTNAME.$BACKUP_NAME.$DATE.tar.gz" $2 1>> /var/log/backup/$BACKUP_NAME.$DATE 2>/dev/null
+    elif [[  $1 == "bzip2"  ]]
+    then
+    echo "BACKUP MADE ON: $DATE" > /var/log/backup/$BACKUP_NAME.$DATE
+    tar -cjvf "$BACKUP_TARGET/$SUBDIR/$HOSTNAME.$BACKUP_NAME.$DATE.tar.gz" $2 1>> /var/log/backup/$BACKUP_NAME.$DATE 2>/dev/null
     else
     echo "Unsupported compression method: $1"
     fi
@@ -37,8 +42,9 @@ do
 if [[ $(echo $ENTRY | cut -d: -f1) == $BACKUP_NAME ]]
 then
     if [[ ! -d $BACKUP_TARGET ]]; then mkdir $BACKUP_TARGET; fi
+    if [[ ! -d $BACKUP_TARGET/adhoc ]]; then mkdir $BACKUP_TARGET/adhoc; fi 
     if [[ ! -d /var/log/backup ]]; then mkdir /var/log/backup; fi
-    compress $COMPRESSION $(echo $ENTRY | cut -d: -f2)
+    compress $COMPRESSION $(echo $ENTRY | cut -d: -f2) "adhoc"
 fi
 done
 echo "Backup complete!"
